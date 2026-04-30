@@ -226,16 +226,16 @@ def build_sink_pac(num_ase: int) -> bytes:
         Octet 2:    Num_ASEs
         Octets 3+:  Codec_Specific_Capabilities
     """
-    codec_id = 0x06
-    lc3_caps = bytes([                                                                                                  
-        # LTV: Length-Type-Value format (each capability)                                                               
-        0x02, 0x01, 0x0F, 0x00,  # L=2, T=Sampling Freq, V=0x000F (8/11/16/22k)                                         
-        0x02, 0x02, 0x03,         # L=2, T=Frame Duration, V=0x0003 (7.5ms+10ms)                                        
-        0x02, 0x03, 0x03,         # L=2, T=Audio Channels, V=0x0003 (1+2)                                               
-        0x05, 0x04, 0x1E, 0x00, 0x78, 0x00,  # L=5, T=Frame Length, V=min30 max120                                      
-        0x02, 0x05, 0x01, 0x00,  # L=2, T=Max Frames/SDU, V=1                                                           
-    ])  
-    return struct.pack('BBB', codec_id, len(lc3_caps), num_ase) + lc3_caps
+    codec_id = 0x06  # LC3
+    lc3_caps = bytes([
+        0x02, 0x01, 0x0F, 0x00,    # L=2, T=1 (SamplingFreq), V=0x000F
+        0x02, 0x02, 0x03, 0x00,    # L=2, T=2 (FrameDuration), V=0x0003
+        0x02, 0x03, 0x03, 0x00,    # L=2, T=3 (AudioChannels), V=0x0003
+        0x05, 0x04, 0x1E, 0x00, 0x78, 0x00,  # L=5, T=4 (FrameLen), min30 max120
+        0x02, 0x05, 0x01, 0x00,    # L=2, T=5 (MaxFramesPerSDU), V=1
+    ])
+    meta_len = 0  # no metadata
+    return struct.pack(f'BBBB', 1, codec_id, len(lc3_caps), num_ase) + lc3_caps + bytes([meta_len])
 
 
 def create_pacs_service(num_ase: int) -> Service:
