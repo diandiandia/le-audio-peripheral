@@ -395,7 +395,7 @@ async def main():
         ad = AdvertisingData()
         ad.name = 'LE-Audio-Test'
         ad.service_uuids16 = [0x1850]
-        await device.start_advertising(ad)
+        await device.start_advertising(advertising_data=bytes(ad))
 
         logger.info(
             "Advertising as 'LE-Audio-Test' with PACS UUID."
