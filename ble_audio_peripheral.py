@@ -392,10 +392,22 @@ async def main():
         device.on('disconnection', on_disconnection)
 
         # ── Start Advertising ────────────────────────────────────────────
-        ad = AdvertisingData()
-        ad.name = 'LE-Audio-Test'
-        ad.service_uuids16 = [0x1850]
-        await device.start_advertising(advertising_data=bytes(ad))
+        from bumble.data_types import ServiceData16BitUUID
+        # 手拼 BLE 广告数据:
+        # AD Flag: 0x02, 0x01, 0x06
+        # Short Name: 0x0E, 0x09, 'LE-Audio-Test'
+        # 16-bit Service UUIDs: 0x03, 0x02/0x03, 0x50, 0x18  (PACS=0x1850)
+        ad_raw = bytes([
+            0x02, 0x01, 0x06,  # Flags: LE General Discoverable
+            0x0E, 0x09,         # Complete Local Name (len=14)
+        ]) + b'LE-Audio-Test' + bytes([
+            0x03, 0x03, 0x50, 0x18,  # Complete List of 16-bit UUIDs: 0x1850 (PACS)
+        ])
+        await device.start_advertising(
+            advertising_data=ad_raw,
+            own_address_type=0x00,  # PUBLIC → DC:A6:32:DC:4A:A4
+        )
+
 
         logger.info(
             "Advertising as 'LE-Audio-Test' with PACS UUID."
