@@ -227,14 +227,14 @@ def build_sink_pac(num_ase: int) -> bytes:
         Octets 3+:  Codec_Specific_Capabilities
     """
     codec_id = 0x06
-    lc3_caps = bytes([
-        0x0F, 0x00,  # Sampling Frequencies
-        0x03,         # Frame Durations (7.5ms + 10ms)
-        0x03,         # Audio Channel Counts (1 + 2)
-        0x1E,         # Min Octets Per Frame (30)
-        0x78,         # Max Octets Per Frame (120)
-        0x01,         # Max Codec Frames Per SDU
-    ])
+    lc3_caps = bytes([                                                                                                  
+        # LTV: Length-Type-Value format (each capability)                                                               
+        0x02, 0x01, 0x0F, 0x00,  # L=2, T=Sampling Freq, V=0x000F (8/11/16/22k)                                         
+        0x02, 0x02, 0x03,         # L=2, T=Frame Duration, V=0x0003 (7.5ms+10ms)                                        
+        0x02, 0x03, 0x03,         # L=2, T=Audio Channels, V=0x0003 (1+2)                                               
+        0x05, 0x04, 0x1E, 0x00, 0x78, 0x00,  # L=5, T=Frame Length, V=min30 max120                                      
+        0x02, 0x05, 0x01, 0x00,  # L=2, T=Max Frames/SDU, V=1                                                           
+    ])  
     return struct.pack('BBB', codec_id, len(lc3_caps), num_ase) + lc3_caps
 
 
