@@ -220,11 +220,8 @@ def _handle_ase_cp_write(connection, value: bytes):
 def build_sink_pac(num_ase: int) -> bytes:
     """Build Sink PAC characteristic value for N ASEs.
 
-    PAC Record format (one record per codec):
-        Octet 0:    Codec_ID (0x06 = LC3)
-        Octet 1:    Codec_Specific_Capabilities_Length
-        Octet 2:    Num_ASEs
-        Octets 3+:  Codec_Specific_Capabilities
+    BlueZ bt_pac struct: codec{id(1)+cid(2)+vid(2)} + cc_len(1) + num_ase(1) = 7 bytes
+    followed by LTV caps and metadata.
     """
     codec_id = 0x06  # LC3
     lc3_caps = bytes([
@@ -234,8 +231,15 @@ def build_sink_pac(num_ase: int) -> bytes:
         0x05, 0x04, 0x1E, 0x00, 0x78, 0x00,  # L=5, T=4 (FrameLen), min30 max120
         0x02, 0x05, 0x01, 0x00,    # L=2, T=5 (MaxFramesPerSDU), V=1
     ])
-    meta_len = 0  # no metadata
-    return struct.pack(f'BBBB', 1, codec_id, len(lc3_caps), num_ase) + lc3_caps + bytes([meta_len])
+    pac_hdr = struct.pack('<B B H H B B',
+        1,                  # num_pac
+        codec_id,           # codec.id
+        0x0000,             # codec.cid (unused for standard codecs)
+        0x0000,             # codec.vid (unused for standard codecs)
+        len(lc3_caps),      # cc_len
+        num_ase             # num_ase
+    )
+    return pac_hdr + lc3_caps + b'\x00'  # meta_len = 0
 
 
 def create_pacs_service(num_ase: int) -> Service:
